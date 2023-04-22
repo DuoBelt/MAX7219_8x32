@@ -20,13 +20,15 @@
 // Defining size, and output pins
 #define MAX_DEVICES 4
 #define CS_PIN  15
-#define HOST "example.com"          // Enter HOST URL without "http:// "  and "/" at the end of URL
+#define HOST "iot.whichway.eu"          // Enter HOST URL without "http:// "  and "/" at the end of URL
 
-#define WIFI_SSID "#######"            // WIFI SSID here                                   
-#define WIFI_PASSWORD "#######"        // WIFI password here
+#define WIFI_SSID "xxxx"            // WIFI SSID here                                   
+#define WIFI_PASSWORD "xxxx"        // WIFI password here
 // Create a new instance of the MD_Parola class with hardware SPI connection
 MD_Parola P = MD_Parola(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
-
+int val = 1;
+int val2 = 99;
+String sendval, sendval2, postData;
 struct animations
 {
   textEffect_t   anim_in; // Animation type
@@ -51,6 +53,7 @@ animations animList[] =
 };
 
 void setup() {
+  Serial.begin(115200); 
  P.begin();
  
   for (uint8_t i=0; i<ARRAY_SIZE(animList); i++)
@@ -75,6 +78,58 @@ void setup() {
 }
 
 void loop() {
+
+                        HTTPClient http;    // http object of clas HTTPClient
+                      WiFiClient wclient; // wclient object of clas HTTPClient    
+
+
+                      // Convert integer variables to string
+                      sendval = String(val);  
+                      sendval2 = String(val2);   
+
+                      
+                      postData = "value1=" + sendval + "&value2=" + sendval2;
+
+                   
+                      http.begin(wclient, "http://xxxxx");   
+
+                      http.addHeader("Content-Type", "application/x-www-form-urlencoded");            //Specify content-type header
+
+                        
+                      
+                      int httpCode = http.POST(postData);   // Send POST request to php file and store server response code in variable named httpCode
+                      Serial.println("Values are, sendval = " + sendval + " and sendval2 = "+sendval2 );
+
+
+                      // if connection eatablished then do this
+                      if (httpCode == 200) { Serial.println("Values uploaded successfully."); Serial.println(httpCode); 
+                      String webpage = http.getString();    // Get html webpage output and store it in a string
+                      Serial.println(webpage + "\n"); 
+                      }
+
+                      // if failed to connect then return and restart
+
+                      else { 
+                        Serial.println(httpCode); 
+                        Serial.println("Failed to upload values. \n"); 
+                        http.end(); 
+                        return; }
+
+
+
+
+
+                        
+
+
+                      delay(3000); 
+                      digitalWrite(LED_BUILTIN, LOW);
+                      delay(3000);
+                      digitalWrite(LED_BUILTIN, HIGH);
+
+                      val+=1; val2+=10; // Incrementing value of variables
+
+  
   static uint8_t i = 0;  // text effect index
 
   if (P.displayAnimate())// animates and returns true when an animation is completed
@@ -86,4 +141,7 @@ void loop() {
     delay(1000);
     i++;   // then set up for next text effect
   }    
+
+
+
 }
